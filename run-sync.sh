@@ -1,12 +1,18 @@
 #!/bin/sh
 
 ACCOUNT="$1"
-PASSWORD="$2"
-TARGET="$3"
-EXCLUDE="$4"   # optional: comma-separated folders to skip, e.g. "Clubs,Forums"
+CRED_FILE="/run/credentials/$ACCOUNT"
 LOGFILE="/var/log/cron/${ACCOUNT}.log"
 LOCKFILE="/tmp/run-sync-${ACCOUNT}.lock"
 MBSYNCRC="/tmp/mbsyncrc-${ACCOUNT}"
+
+if [ ! -f "$CRED_FILE" ]; then
+  echo "[$(date)] No credentials file found for $ACCOUNT" >&2
+  exit 1
+fi
+
+# Load credentials — never logged or passed as arguments
+. "$CRED_FILE"
 
 if [ -e "$LOCKFILE" ]; then
   echo "[$(date)] Skipping: previous sync for $ACCOUNT still running ($(cat $LOCKFILE))" >> "$LOGFILE"

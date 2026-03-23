@@ -23,8 +23,7 @@ services:
       - ./backup:/data
       - ./logs:/var/log/cron
     environment:
-      CRON_JOBS: |
-        0 2 * * * run-sync you@gmail.com your-app-password you
+      ACCOUNT_1: "you@gmail.com|your-app-password|you|0 2 * * *"
     restart: unless-stopped
 ```
 
@@ -36,18 +35,27 @@ docker compose up -d
 
 Your emails will be synced nightly at 2am to `./backup/you/`.
 
-The `run-sync` command takes three required arguments and one optional:
+## Account format
 
-| Argument | Description |
+Each account is configured as a separate `ACCOUNT_*` environment variable in pipe-separated format:
+
+```
+email|password|target|schedule[|exclude]
+```
+
+| Field | Description |
 |---|---|
-| `ACCOUNT` | Full Gmail address (`user@gmail.com`) |
-| `PASSWORD` | Gmail App Password |
-| `TARGET` | Subdirectory name under `/data` where mail is stored |
-| `EXCLUDE` _(optional)_ | Comma-separated folder labels to skip, e.g. `"Clubs,Forums"` |
+| `email` | Full Gmail address (`user@gmail.com`) |
+| `password` | Gmail App Password |
+| `target` | Subdirectory name under `/data` where mail is stored |
+| `schedule` | Cron schedule — use [crontab.guru](https://crontab.guru) to build one |
+| `exclude` _(optional)_ | Comma-separated folder labels to skip, e.g. `Clubs,Forums` |
+
+Passwords are written to a credentials file at container startup and never passed as command arguments or logged.
 
 ## Multiple accounts
 
-Add one line per account, staggered so they don't overlap:
+Add one `ACCOUNT_*` variable per account, staggered so they don't overlap:
 
 ```yaml
 services:
@@ -57,9 +65,8 @@ services:
       - ./backup:/data
       - ./logs:/var/log/cron
     environment:
-      CRON_JOBS: |
-        0 2 * * * run-sync alice@gmail.com alice-app-password alice
-        0 4 * * * run-sync bob@gmail.com bob-app-password bob
+      ACCOUNT_1: "alice@gmail.com|alice-app-password|alice|0 2 * * *"
+      ACCOUNT_2: "bob@gmail.com|bob-app-password|bob|0 4 * * *"
     restart: unless-stopped
 ```
 
@@ -83,7 +90,7 @@ backup/
     ...
 ```
 
-Note: `[Gmail]/All Mail` contains a copy of every email across all folders. Use the `EXCLUDE` argument if you want to skip it to save storage.
+Note: `[Gmail]/All Mail` contains a copy of every email across all folders. Use the `exclude` field if you want to skip it to save storage.
 
 ## Viewing logs
 
@@ -103,10 +110,12 @@ tail -f logs/you@gmail.com.log
 
 | Variable | Default | Description |
 |---|---|---|
-| `CRON_JOBS` | _(required)_ | Crontab entries — one job per line |
+| `ACCOUNT_*` | _(required)_ | One per account, pipe-separated (see above) |
+| `PUID` | `0` | User ID to run sync jobs as (recommended: your local UID) |
+| `PGID` | `0` | Group ID to run sync jobs as |
 | `MAX_LOG_SIZE` | `5000000` | Log file size in bytes before rotation |
 
-Cron schedule format: `minute hour day month weekday` — use [crontab.guru](https://crontab.guru) to build a schedule.
+Run `id` in your terminal to get your `PUID` and `PGID`.
 
 ## Using the backup
 

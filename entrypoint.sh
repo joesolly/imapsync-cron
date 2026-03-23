@@ -13,9 +13,27 @@ else
 fi
 
 CRON_FILE="/etc/crontabs/${CRON_USER}"
+CREDENTIALS_DIR="/run/credentials"
+mkdir -p "$CREDENTIALS_DIR"
 
-# Strip blank lines from CRON_JOBS before writing crontab
-printf "%s\n" "$CRON_JOBS" | grep -v '^[[:space:]]*$' > "$CRON_FILE"
+# Parse ACCOUNT_* env vars (format: email|password|target|schedule[|exclude])
+# Write credentials files and build crontab — passwords never enter the crontab
+printenv | grep '^ACCOUNT_' | while IFS='=' read -r key value; do
+  email=$(echo "$value"    | cut -d'|' -f1)
+  password=$(echo "$value" | cut -d'|' -f2)
+  target=$(echo "$value"   | cut -d'|' -f3)
+  schedule=$(echo "$value" | cut -d'|' -f4)
+  exclude=$(echo "$value"  | cut -d'|' -f5)
+
+  # Write credentials file readable only by the sync user
+  cred_file="$CREDENTIALS_DIR/$email"
+  printf 'PASSWORD=%s\nTARGET=%s\nEXCLUDE=%s\n' "$password" "$target" "$exclude" > "$cred_file"
+  chmod 600 "$cred_file"
+
+  # Add cron entry — no password
+  echo "$schedule run-sync $email" >> "$CRON_FILE"
+done
+
 chmod 600 "$CRON_FILE"
 
 # Run cron in foreground as the target user via su-exec
