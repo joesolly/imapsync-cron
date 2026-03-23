@@ -13,6 +13,9 @@ else
 fi
 
 CRON_FILE="/etc/crontabs/${CRON_USER}"
+# Clear any default Alpine crontab entries
+printf '' > "$CRON_FILE"
+
 CREDENTIALS_DIR="/run/credentials"
 mkdir -p "$CREDENTIALS_DIR"
 
