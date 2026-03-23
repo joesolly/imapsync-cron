@@ -1,9 +1,8 @@
-FROM python:3-alpine
+FROM alpine:latest
 
 ENV MAX_LOG_SIZE=5000000
 
-COPY imapbackup312.py /usr/local/bin/imapbackup
-RUN chmod +x /usr/local/bin/imapbackup
+RUN apk add --no-cache isync ca-certificates
 
 # ---------------------------------------------------------
 # Add helper scripts

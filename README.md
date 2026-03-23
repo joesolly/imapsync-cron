@@ -1,6 +1,8 @@
 # gmail-backup
 
-Incrementally backs up Gmail to local `.mbox` files on a schedule. Each IMAP folder becomes a separate file (e.g. `INBOX.mbox`, `Sent Mail.mbox`). Only new messages are downloaded on each run.
+Incrementally syncs Gmail to local [Maildir](https://en.wikipedia.org/wiki/Maildir) on a schedule using [mbsync](https://isync.sourceforge.io). Each email is stored as an individual file, so backups only transfer new and deleted messages — not the entire mailbox.
+
+Gmail is treated as the source of truth — deletions and new mail sync down to local, but no local changes are ever pushed back to Gmail.
 
 ## Prerequisites
 
@@ -32,7 +34,16 @@ Then run:
 docker compose up -d
 ```
 
-Your emails will be backed up nightly at 2am to `./backup/you/`.
+Your emails will be synced nightly at 2am to `./backup/you/`.
+
+The `run-sync` command takes three required arguments and one optional:
+
+| Argument | Description |
+|---|---|
+| `ACCOUNT` | Full Gmail address (`user@gmail.com`) |
+| `PASSWORD` | Gmail App Password |
+| `TARGET` | Subdirectory name under `/data` where mail is stored |
+| `EXCLUDE` _(optional)_ | Comma-separated folder labels to skip, e.g. `"Clubs,Forums"` |
 
 ## Multiple accounts
 
@@ -54,17 +65,25 @@ services:
 
 ## Backup output
 
+Each folder is a Maildir directory. Every email is a separate file — only new and deleted messages are touched on each sync.
+
 ```
 backup/
   alice/
-    INBOX.mbox
-    Sent Mail.mbox
-    Archive.mbox
+    INBOX/
+    [Gmail]/
+      Sent Mail/
+      Drafts/
+      Starred/
+      ...
+    My Label/
     ...
   bob/
-    INBOX.mbox
+    INBOX/
     ...
 ```
+
+Note: `[Gmail]/All Mail` contains a copy of every email across all folders. Use the `EXCLUDE` argument if you want to skip it to save storage.
 
 ## Viewing logs
 
@@ -74,13 +93,7 @@ Cron activity streams to stdout and is visible via:
 docker compose logs -f
 ```
 
-Per-account sync logs are written to `/var/log/cron/<account>.log` inside the container. Mount `./logs:/var/log/cron` (as shown in the quick start) to access them directly on the host:
-
-```
-logs/
-  you@gmail.com.log
-  other@gmail.com.log
-```
+Per-account sync logs are written to `/var/log/cron/<account>.log`. Mount `./logs:/var/log/cron` (as shown in the quick start) to access them directly on the host:
 
 ```sh
 tail -f logs/you@gmail.com.log
@@ -95,10 +108,10 @@ tail -f logs/you@gmail.com.log
 
 Cron schedule format: `minute hour day month weekday` — use [crontab.guru](https://crontab.guru) to build a schedule.
 
-## Using the mbox files
+## Using the backup
 
-`.mbox` is a standard format supported by most email clients:
+Maildir is supported natively by most email clients:
 
-- **Apple Mail** — File → Import Mailboxes → Files in mbox format
-- **Thunderbird** — ImportExportTools NG extension → Import mbox file
-- **mutt** — `mutt -f backup/alice/INBOX.mbox`
+- **Thunderbird** — add a Local Folder pointing at the account directory
+- **mutt / neomutt** — `set mbox_type=Maildir` and point at the folder
+- **Apple Mail** — does not support Maildir directly; run a local [Dovecot](https://www.dovecot.org) instance to serve the Maildir over IMAP, then add it as a normal account
