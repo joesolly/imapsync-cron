@@ -54,7 +54,7 @@ umask 022
 rotate "$LOGFILE"
 
 mkdir -p "/data/$TARGET"
-mbsync -c "$MBSYNCRC" -a 2>&1 | tee -a "$LOGFILE"
+mbsync -c "$MBSYNCRC" -Va 2>&1 | tee -a "$LOGFILE"
 
 # mbsync hardcodes 0700 on Maildir dirs — fix after sync
 chmod -R a+rX "/data/$TARGET"
