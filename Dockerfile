@@ -2,7 +2,7 @@ FROM alpine:latest
 
 ENV MAX_LOG_SIZE=5000000
 
-RUN apk add --no-cache isync ca-certificates
+RUN apk add --no-cache isync ca-certificates su-exec
 
 # ---------------------------------------------------------
 # Add helper scripts
