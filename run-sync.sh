@@ -28,7 +28,7 @@ IMAPAccount account
 Host imap.gmail.com
 User $ACCOUNT
 Pass $PASSWORD
-SSLType IMAPS
+TLSType IMAPS
 CertificateFile /etc/ssl/certs/ca-certificates.crt
 
 IMAPStore remote
@@ -48,6 +48,8 @@ Create Near
 Expunge Near
 SyncState *
 EOF
+
+umask 022
 
 rotate "$LOGFILE"
 
