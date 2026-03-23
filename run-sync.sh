@@ -38,6 +38,7 @@ MaildirStore local
 SubFolders Verbatim
 Path /data/$TARGET/
 Inbox /data/$TARGET/INBOX
+AltMap yes
 
 Channel sync
 Far :remote:
