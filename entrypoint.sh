@@ -19,6 +19,8 @@ printf '' > "$CRON_FILE"
 CREDENTIALS_DIR="/run/credentials"
 mkdir -p "$CREDENTIALS_DIR"
 
+printf 'PIPELINE_DEPTH=%s\n' "${PIPELINE_DEPTH:-50}" > /run/sync-config
+
 # Parse ACCOUNT_* env vars (format: email|password|target|schedule[|exclude])
 # Write credentials files and build crontab — passwords never enter the crontab
 printenv | grep '^ACCOUNT_' | while IFS='=' read -r key value; do

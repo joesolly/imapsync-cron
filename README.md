@@ -114,6 +114,7 @@ tail -f logs/you@gmail.com.log
 | `PUID` | `0` | User ID to run sync jobs as (recommended: your local UID) |
 | `PGID` | `0` | Group ID to run sync jobs as |
 | `MAX_LOG_SIZE` | `5000000` | Log file size in bytes before rotation |
+| `PIPELINE_DEPTH` | `50` | Max concurrent IMAP commands. Lower (e.g. `1`) reduces quota errors on large folders like `[Gmail]/All Mail` |
 
 Run `id` in your terminal to get your `PUID` and `PGID`.
 

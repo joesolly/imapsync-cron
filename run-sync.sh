@@ -13,6 +13,7 @@ fi
 
 # Load credentials — never logged or passed as arguments
 . "$CRED_FILE"
+. /run/sync-config
 
 if [ -e "$LOCKFILE" ]; then
   echo "[$(date)] Skipping: previous sync for $ACCOUNT still running ($(cat $LOCKFILE))" >> "$LOGFILE"
@@ -36,6 +37,7 @@ User $ACCOUNT
 Pass $PASSWORD
 TLSType IMAPS
 CertificateFile /etc/ssl/certs/ca-certificates.crt
+PipelineDepth ${PIPELINE_DEPTH:-50}
 
 IMAPStore remote
 Account account

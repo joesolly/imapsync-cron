@@ -1,6 +1,7 @@
 FROM alpine:latest
 
 ENV MAX_LOG_SIZE=5000000
+ENV PIPELINE_DEPTH=50
 
 RUN apk add --no-cache isync ca-certificates su-exec
 
