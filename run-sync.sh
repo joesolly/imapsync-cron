@@ -14,8 +14,6 @@ if [ ! -f "$CRED_FILE" ]; then
   exit 1
 fi
 
-# Load credentials — never logged or passed as arguments
-. "$CRED_FILE"
 . /run/sync-config
 
 # POST a title/body to Apprise (no-op when APPRISE_URL is unset)
@@ -33,6 +31,16 @@ bump() {
   echo "$n"
 }
 
+# Load credentials — never logged or passed as arguments. Try it in a subshell
+# first: a syntax error while sourcing would otherwise kill this script silently.
+if ! ( . "$CRED_FILE" ) >/dev/null 2>>"$LOGFILE"; then
+  echo "[$(date)] Cannot read credentials file for $ACCOUNT" >> "$LOGFILE"
+  [ "$(bump "$FAILFILE")" -eq "${FAIL_ALERT_THRESHOLD:-3}" ] \
+    && notify "imap sync FAILED: $ACCOUNT" "Credentials file is unreadable, so no sync has run for ${FAIL_ALERT_THRESHOLD:-3} runs in a row."
+  exit 1
+fi
+. "$CRED_FILE"
+
 # flock is released by the kernel when the process dies, however it dies,
 # so a killed run can never leave a stale lock behind.
 exec 9>"$LOCKFILE"
@@ -45,6 +53,7 @@ fi
 rm -f "$SKIPFILE"
 trap 'rm -f "$MBSYNCRC" "$RCFILE"' EXIT
 
+PASS_Q=$(printf %s "$PASSWORD" | sed 's/\\/\\\\/g; s/"/\\"/g')
 PATTERNS="*"
 if [ -n "$EXCLUDE" ]; then
   for folder in $(echo "$EXCLUDE" | tr ',' '\n'); do
@@ -56,7 +65,7 @@ cat > "$MBSYNCRC" << EOF
 IMAPAccount account
 Host imap.gmail.com
 User $ACCOUNT
-Pass $PASSWORD
+Pass "$PASS_Q"
 TLSType IMAPS
 CertificateFile /etc/ssl/certs/ca-certificates.crt
 PipelineDepth ${PIPELINE_DEPTH:-50}

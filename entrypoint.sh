@@ -22,18 +22,22 @@ mkdir -p "$CREDENTIALS_DIR"
 printf "PIPELINE_DEPTH=%s\nAPPRISE_URL='%s'\nSKIP_ALERT_THRESHOLD=%s\nFAIL_ALERT_THRESHOLD=%s\n" \
   "${PIPELINE_DEPTH:-50}" "${APPRISE_URL:-}" "${SKIP_ALERT_THRESHOLD:-6}" "${FAIL_ALERT_THRESHOLD:-3}" > /run/sync-config
 
+# Single-quote a value so the credentials file can be sourced safely
+# whatever characters it holds (spaces, quotes, parentheses, $ ...)
+q() { printf "'%s'" "$(printf %s "$1" | sed "s/'/'\\\\''/g")"; }
+
 # Parse ACCOUNT_* env vars (format: email|password|target|schedule[|exclude])
 # Write credentials files and build crontab — passwords never enter the crontab
 printenv | grep '^ACCOUNT_' | while IFS='=' read -r key value; do
-  email=$(echo "$value"    | cut -d'|' -f1)
-  password=$(echo "$value" | cut -d'|' -f2)
-  target=$(echo "$value"   | cut -d'|' -f3)
-  schedule=$(echo "$value" | cut -d'|' -f4)
-  exclude=$(echo "$value"  | cut -d'|' -f5)
+  email=$(printf '%s\n' "$value"    | cut -d'|' -f1)
+  password=$(printf '%s\n' "$value" | cut -d'|' -f2)
+  target=$(printf '%s\n' "$value"   | cut -d'|' -f3)
+  schedule=$(printf '%s\n' "$value" | cut -d'|' -f4)
+  exclude=$(printf '%s\n' "$value"  | cut -d'|' -f5)
 
   # Write credentials file readable only by the sync user
   cred_file="$CREDENTIALS_DIR/$email"
-  printf 'PASSWORD=%s\nTARGET=%s\nEXCLUDE=%s\n' "$password" "$target" "$exclude" > "$cred_file"
+  printf 'PASSWORD=%s\nTARGET=%s\nEXCLUDE=%s\n' "$(q "$password")" "$(q "$target")" "$(q "$exclude")" > "$cred_file"
   chmod 600 "$cred_file"
 
   # Add cron entry — no password

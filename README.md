@@ -51,7 +51,7 @@ email|password|target|schedule[|exclude]
 | `schedule` | Cron schedule — use [crontab.guru](https://crontab.guru) to build one |
 | `exclude` _(optional)_ | Comma-separated folder labels to skip, e.g. `Clubs,Forums` |
 
-Passwords are written to a credentials file at container startup and never passed as command arguments or logged.
+Passwords are written to a credentials file at container startup and never passed as command arguments or logged. They may contain any characters except `|`, the field separator (the 4-group spaced form Google shows for app passwords works as is).
 
 ## Multiple accounts
 
