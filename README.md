@@ -115,6 +115,9 @@ tail -f logs/you@gmail.com.log
 | `PGID` | `0` | Group ID to run sync jobs as |
 | `MAX_LOG_SIZE` | `5000000` | Log file size in bytes before rotation |
 | `PIPELINE_DEPTH` | `50` | Max concurrent IMAP commands. Lower (e.g. `1`) reduces quota errors on large folders like `[Gmail]/All Mail` |
+| `APPRISE_URL` | _(unset)_ | Apprise notify endpoint, e.g. `http://apprise:8000/notify/apprise`. Unset disables alerts |
+| `SKIP_ALERT_THRESHOLD` | `6` | Alert once after this many consecutive runs skipped because a sync is still running |
+| `FAIL_ALERT_THRESHOLD` | `3` | Alert once after this many consecutive runs where `mbsync` exits non-zero |
 
 Run `id` in your terminal to get your `PUID` and `PGID`.
 

@@ -19,7 +19,8 @@ printf '' > "$CRON_FILE"
 CREDENTIALS_DIR="/run/credentials"
 mkdir -p "$CREDENTIALS_DIR"
 
-printf 'PIPELINE_DEPTH=%s\n' "${PIPELINE_DEPTH:-50}" > /run/sync-config
+printf "PIPELINE_DEPTH=%s\nAPPRISE_URL='%s'\nSKIP_ALERT_THRESHOLD=%s\nFAIL_ALERT_THRESHOLD=%s\n" \
+  "${PIPELINE_DEPTH:-50}" "${APPRISE_URL:-}" "${SKIP_ALERT_THRESHOLD:-6}" "${FAIL_ALERT_THRESHOLD:-3}" > /run/sync-config
 
 # Parse ACCOUNT_* env vars (format: email|password|target|schedule[|exclude])
 # Write credentials files and build crontab — passwords never enter the crontab
