@@ -24,16 +24,16 @@ echo 5635 > /tmp/run-sync-a@b.c.lock
 MB_RC=0 run-sync a@b.c >/dev/null
 test ! -s /tmp/alerts || { echo "FAIL 1: unexpected alert"; exit 1; }
 
-# 2. a live holder makes runs skip; alert fires once, at the threshold
+# 2. a live holder makes runs skip; alerts fire on every skip from the threshold on
 flock /tmp/run-sync-a@b.c.lock sleep 5 & sleep 1
 for i in 1 2 3; do run-sync a@b.c; done
-test "$(grep -c STUCK /tmp/alerts)" = 1 || { echo "FAIL 2: expected one STUCK alert"; exit 1; }
+test "$(grep -c STUCK /tmp/alerts)" = 2 || { echo "FAIL 2: expected STUCK alerts on skips 2 and 3"; exit 1; }
 wait
 
-# 3. failing mbsync alerts once at the threshold, success resets the streak
+# 3. failing mbsync alerts on every failure from the threshold on, success resets the streak
 : > /tmp/alerts
 for i in 1 2 3; do MB_RC=1 run-sync a@b.c >/dev/null; done
-test "$(grep -c FAILED /tmp/alerts)" = 1 || { echo "FAIL 3: expected one FAILED alert"; exit 1; }
+test "$(grep -c FAILED /tmp/alerts)" = 2 || { echo "FAIL 3: expected FAILED alerts on failures 2 and 3"; exit 1; }
 MB_RC=0 run-sync a@b.c >/dev/null
 test ! -e /tmp/run-sync-a@b.c.fails || { echo "FAIL 3b: streak not reset"; exit 1; }
 

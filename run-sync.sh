@@ -35,7 +35,7 @@ bump() {
 # first: a syntax error while sourcing would otherwise kill this script silently.
 if ! ( . "$CRED_FILE" ) >/dev/null 2>>"$LOGFILE"; then
   echo "[$(date)] Cannot read credentials file for $ACCOUNT" >> "$LOGFILE"
-  [ "$(bump "$FAILFILE")" -eq "${FAIL_ALERT_THRESHOLD:-3}" ] \
+  [ "$(bump "$FAILFILE")" -ge "${FAIL_ALERT_THRESHOLD:-3}" ] \
     && notify "imap sync FAILED: $ACCOUNT" "Credentials file is unreadable, so no sync has run for ${FAIL_ALERT_THRESHOLD:-3} runs in a row."
   exit 1
 fi
@@ -46,7 +46,7 @@ fi
 exec 9>"$LOCKFILE"
 if ! flock -n 9; then
   echo "[$(date)] Skipping: previous sync for $ACCOUNT still running" >> "$LOGFILE"
-  [ "$(bump "$SKIPFILE")" -eq "${SKIP_ALERT_THRESHOLD:-6}" ] \
+  [ "$(bump "$SKIPFILE")" -ge "${SKIP_ALERT_THRESHOLD:-6}" ] \
     && notify "imap sync STUCK: $ACCOUNT" "Skipped ${SKIP_ALERT_THRESHOLD:-6} runs in a row, a previous sync is still running."
   exit 0
 fi
@@ -100,7 +100,7 @@ mkdir -p "/data/$TARGET"
 
 RC=$(cat "$RCFILE" 2>/dev/null || echo 1)
 if [ "$RC" -ne 0 ]; then
-  [ "$(bump "$FAILFILE")" -eq "${FAIL_ALERT_THRESHOLD:-3}" ] \
+  [ "$(bump "$FAILFILE")" -ge "${FAIL_ALERT_THRESHOLD:-3}" ] \
     && notify "imap sync FAILED: $ACCOUNT" "mbsync failed ${FAIL_ALERT_THRESHOLD:-3} runs in a row (last exit code $RC). See $(basename "$LOGFILE")."
 else
   rm -f "$FAILFILE"
